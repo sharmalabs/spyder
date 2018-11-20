@@ -10,6 +10,7 @@ Configuration dialog / Preferences.
 
 # Standard library imports
 import os.path as osp
+import traceback
 
 # Third party imports
 from qtpy import API
@@ -700,7 +701,6 @@ class SpyderConfigPage(ConfigPage, ConfigAccessMixin):
         if tip is not None:
             combobox.setToolTip(tip)
         combobox.addItems(choices)
-        self.comboboxes[combobox] = (option, default)
 
         msg = _('Invalid file path')
         self.validate_data[edit] = (osp.isfile, msg)
@@ -1130,8 +1130,16 @@ class MainConfigPage(GeneralConfigPage):
                 data = combobox.itemData(combobox.currentIndex())
                 value = from_qvariant(data, to_text_string)
                 break
-        save_lang_conf(value)
-        self.set_option('interface_language', value)
+        try:
+            save_lang_conf(value)
+            self.set_option('interface_language', value)
+        except Exception:
+            QMessageBox.critical(self, _("Error"),
+                _("We're sorry but the following error occurred while trying "
+                  "to set your selected language:<br><br>"
+                  "<tt>{}</tt>").format(traceback.format_exc()),
+                QMessageBox.Ok)
+            return
 
 
 class ColorSchemeConfigPage(GeneralConfigPage):
