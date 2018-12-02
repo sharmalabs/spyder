@@ -613,7 +613,7 @@ class IPythonConsole(SpyderPluginWidget):
         help_n = 'connect_to_oi'
         help_o = CONF.get('help', 'connect/ipython_console')
         color_scheme_n = 'color_scheme_name'
-        color_scheme_o = CONF.get('color_schemes', 'selected')
+        color_scheme_o = CONF.get('appearance', 'selected')
         show_time_n = 'show_elapsed_time'
         show_time_o = self.get_option(show_time_n)
         reset_namespace_n = 'show_reset_namespace_warning'
@@ -936,8 +936,9 @@ class IPythonConsole(SpyderPluginWidget):
                     if is_internal_kernel:
                         client.shellwidget.silent_execute(
                             to_text_string('get_ipython().cell_code = '
-                                           'r"""{}"""')
+                                           '"""{}"""')
                                 .format(to_text_string(code)
+                                .replace('\\', r'\\')
                                 .replace('"""', r'\"\"\"')))
                     self.execute_code(line)
             except AttributeError:
@@ -1191,7 +1192,7 @@ class IPythonConsole(SpyderPluginWidget):
             spy_cfg.JupyterWidget.out_prompt = out_prompt_o
 
         # Style
-        color_scheme = CONF.get('color_schemes', 'selected')
+        color_scheme = CONF.get('appearance', 'selected')
         style_sheet = create_qss_style(color_scheme)[0]
         spy_cfg.JupyterWidget.style_sheet = style_sheet
         spy_cfg.JupyterWidget.syntax_style = color_scheme
@@ -1548,10 +1549,16 @@ class IPythonConsole(SpyderPluginWidget):
             return (error_msg, None)
         kernel_manager._kernel_spec = kernel_spec
 
+        kwargs = {}
+        if os.name == 'nt':
+            # avoid closing fds on win+Python 3.7
+            # which prevents interrupts
+            # jupyter_client > 5.2.3 will do this by default
+            kwargs['close_fds'] = False
         # Catch any error generated when trying to start the kernel
         # See issue 7302
         try:
-            kernel_manager.start_kernel(stderr=stderr_handle)
+            kernel_manager.start_kernel(stderr=stderr_handle, **kwargs)
         except Exception:
             error_msg = _("The error is:<br><br>"
                           "<tt>{}</tt>").format(traceback.format_exc())
