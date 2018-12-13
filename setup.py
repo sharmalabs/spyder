@@ -210,7 +210,7 @@ install_requires = [
     'sphinx',
     'pylint',
     'psutil',
-    'qtawesome>=0.5.0',
+    'qtawesome>=0.5.2',
     'qtpy>=1.5.0',
     'pickleshare',
     'pyzmq',
@@ -218,6 +218,7 @@ install_requires = [
     'numpydoc',
     'spyder-kernels>=1.0',
     'qdarkstyle>=2.6.4',
+    'atomicwrites',
     # Don't require keyring for Python 2 and Linux
     # because it depends on system packages
     'keyring;sys_platform!="linux2"',

@@ -25,7 +25,11 @@ if os.name == 'nt':
     VALID_W_INTERPRETER = os.path.join(python_dir, 'pythonw.exe')
     INVALID_INTERPRETER = os.path.join(python_dir, 'Scripts', 'ipython.exe')
 else:
-    home_dir = os.environ['HOME']
+    if sys.platform.startswith('linux'):
+        home_dir = os.environ['HOME']
+    else:
+        # Parent Miniconda dir in macOS Azure VMs
+        home_dir = os.path.join('/usr', 'local')
     VALID_INTERPRETER = os.path.join(home_dir, 'miniconda', 'bin', 'python')
     VALID_W_INTERPRETER = os.path.join(home_dir, 'miniconda', 'bin', 'pythonw')
     INVALID_INTERPRETER = os.path.join(home_dir, 'miniconda', 'bin', 'ipython')
@@ -111,6 +115,8 @@ def test_is_module_installed():
     assert is_module_installed('jedi', '>=0.7.0')
 
 
+@pytest.mark.skipif(os.name == 'nt' and os.environ.get('AZURE') is not None,
+                    reason="Fails on Windows/Azure")
 def test_is_module_installed_with_custom_interpreter():
     """Test if a module with the proper version is installed"""
     current = sys.executable
